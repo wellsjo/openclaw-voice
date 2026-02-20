@@ -14,13 +14,22 @@ TTS server must be running at `http://localhost:8001`. Check with:
 curl -s http://localhost:8001/health
 ```
 
+## Configuration
+
+Set your default voice via environment variable:
+```bash
+export TTS_DEFAULT_VOICE=myvoice
+```
+
+Scripts read this automatically. Falls back to `alba` if not set.
+
 ## Quick TTS
 
 For simple audio generation:
 ```bash
 curl -s "http://localhost:8001/v1/audio/speech" -X POST \
   -H "Content-Type: application/json" \
-  -d '{"input":"Your text here", "voice":"alba"}' \
+  -d '{"input":"Your text here", "voice":"'$TTS_DEFAULT_VOICE'"}' \
   -o output.wav
 ```
 
@@ -31,7 +40,7 @@ For podcasts and longer content:
 python scripts/generate_audio.py script.txt -o output.mp3
 ```
 
-Override voice with `-v`:
+Uses `$TTS_DEFAULT_VOICE` automatically. Override with `-v`:
 ```bash
 python scripts/generate_audio.py script.txt -o output.mp3 -v morgan
 ```

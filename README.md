@@ -28,12 +28,21 @@ cd openclaw-voice
 # Server runs at http://localhost:8001
 ```
 
-### 3. Generate Speech
+### 3. Set Default Voice (optional)
+
+```bash
+# Add to your shell profile (~/.zshrc, ~/.bashrc, etc.)
+export TTS_DEFAULT_VOICE=alba
+```
+
+Scripts will use this voice automatically.
+
+### 4. Generate Speech
 
 ```bash
 curl http://localhost:8001/v1/audio/speech -X POST \
   -H "Content-Type: application/json" \
-  -d '{"input": "Hello world", "voice": "alba"}' \
+  -d '{"input": "Hello world", "voice": "'$TTS_DEFAULT_VOICE'"}' \
   -o hello.wav
 ```
 
