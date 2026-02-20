@@ -16,12 +16,13 @@ curl -s http://localhost:8001/health
 
 ## Configuration
 
-Set your default voice via environment variable:
+Set defaults via environment variables:
 ```bash
-export TTS_DEFAULT_VOICE=myvoice
+export TTS_DEFAULT_VOICE=myvoice   # Falls back to "alba"
+export TTS_DEFAULT_SPEED=0.92      # Falls back to 1.0 (range: 0.25-4.0)
 ```
 
-Scripts read this automatically. Falls back to `alba` if not set.
+Scripts read these automatically.
 
 ## Quick TTS
 
@@ -29,9 +30,11 @@ For simple audio generation:
 ```bash
 curl -s "http://localhost:8001/v1/audio/speech" -X POST \
   -H "Content-Type: application/json" \
-  -d '{"input":"Your text here", "voice":"'$TTS_DEFAULT_VOICE'"}' \
+  -d '{"input":"Your text here", "voice":"'$TTS_DEFAULT_VOICE'", "speed":'${TTS_DEFAULT_SPEED:-1.0}'}' \
   -o output.wav
 ```
+
+Speed range: 0.25 (very slow) to 4.0 (very fast). Default is 1.0.
 
 ## Long-Form Content
 
@@ -40,9 +43,9 @@ For podcasts and longer content:
 python scripts/generate_audio.py script.txt -o output.mp3
 ```
 
-Uses `$TTS_DEFAULT_VOICE` automatically. Override with `-v`:
+Uses `$TTS_DEFAULT_VOICE` and `$TTS_DEFAULT_SPEED` automatically. Override with flags:
 ```bash
-python scripts/generate_audio.py script.txt -o output.mp3 -v morgan
+python scripts/generate_audio.py script.txt -o output.mp3 -v morgan -s 0.92
 ```
 
 ## Adding Custom Voices

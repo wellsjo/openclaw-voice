@@ -28,14 +28,15 @@ cd openclaw-voice
 # Server runs at http://localhost:8001
 ```
 
-### 3. Set Default Voice (optional)
+### 3. Set Defaults (optional)
 
 ```bash
 # Add to your shell profile (~/.zshrc, ~/.bashrc, etc.)
 export TTS_DEFAULT_VOICE=alba
+export TTS_DEFAULT_SPEED=0.92   # Slightly slower (range: 0.25-4.0)
 ```
 
-Scripts will use this voice automatically.
+Scripts will use these automatically.
 
 ### 4. Generate Speech
 

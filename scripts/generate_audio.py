@@ -17,6 +17,7 @@ import urllib.error
 
 TTS_URL = os.environ.get("TTS_URL", "http://localhost:8001/v1/audio/speech")
 DEFAULT_VOICE = os.environ.get("TTS_DEFAULT_VOICE", "alba")
+DEFAULT_SPEED = float(os.environ.get("TTS_DEFAULT_SPEED", "1.0"))
 MAX_CHARS_PER_CHUNK = 4000  # Safe limit per TTS request
 
 
@@ -60,12 +61,13 @@ def chunk_text(text: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> list[str]:
     return chunks if chunks else [text]
 
 
-def generate_chunk(text: str, voice: str, output_path: str) -> bool:
+def generate_chunk(text: str, voice: str, speed: float, output_path: str) -> bool:
     """Generate audio for a single chunk."""
     payload = json.dumps({
         "model": "tts-1",
         "input": text,
-        "voice": voice
+        "voice": voice,
+        "speed": speed
     }).encode('utf-8')
     
     req = urllib.request.Request(
@@ -121,6 +123,8 @@ def main():
     parser.add_argument('-o', '--output', default='podcast.mp3', help='Output file path')
     parser.add_argument('-v', '--voice', default=DEFAULT_VOICE, 
                         help=f'TTS voice (default: $TTS_DEFAULT_VOICE or "{DEFAULT_VOICE}")')
+    parser.add_argument('-s', '--speed', type=float, default=DEFAULT_SPEED,
+                        help=f'Speech speed 0.25-4.0 (default: $TTS_DEFAULT_SPEED or {DEFAULT_SPEED})')
     parser.add_argument('--text', help='Direct text input instead of file')
     args = parser.parse_args()
     
@@ -153,7 +157,7 @@ def main():
             chunk_path = os.path.join(temp_dir, f"chunk_{i:03d}.wav")
             print(f"Generating chunk {i+1}/{len(chunks)} ({len(chunk)} chars)...")
             
-            if not generate_chunk(chunk, args.voice, chunk_path):
+            if not generate_chunk(chunk, args.voice, args.speed, chunk_path):
                 print(f"Failed to generate chunk {i+1}", file=sys.stderr)
                 sys.exit(1)
             
