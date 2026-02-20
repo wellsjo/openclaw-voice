@@ -7,26 +7,50 @@ description: Generate audio from text using TTS. Use for podcasts, audio summari
 
 Generate audio content using local TTS. Supports podcasts, summaries, briefs, voice memos — anything spoken.
 
-## Prerequisites
+## Setup (run once per user)
 
-TTS server must be running at `http://localhost:8001`. Check with:
+### 1. Check if TTS server is running
+
 ```bash
 curl -s http://localhost:8001/health
 ```
 
-## Configuration
-
-Set defaults via environment variables:
+If not running, guide user to start it:
 ```bash
-export TTS_DEFAULT_VOICE=myvoice   # Falls back to "alba"
-export TTS_DEFAULT_SPEED=0.92      # Falls back to 1.0 (range: 0.25-4.0)
+cd ~/skills/voice  # or wherever they cloned openclaw-voice
+python pocketapi.py
 ```
 
-Scripts read these automatically.
+For background/persistent running, suggest they add to their shell startup or use a process manager.
 
-## Quick TTS
+### 2. Configure defaults
 
-For simple audio generation:
+Ask user to add to their shell profile (`~/.zshrc`, `~/.bashrc`, etc.):
+
+```bash
+export TTS_DEFAULT_VOICE=alba       # or their custom voice name
+export TTS_DEFAULT_SPEED=1.0        # 0.25-4.0, lower = slower
+```
+
+### 3. Add a custom voice (optional)
+
+If user wants a custom voice, they need to:
+
+1. Find a YouTube video with clear speech from the target voice
+2. Give you the URL and **specific timestamps** (you cannot watch the video)
+3. You run:
+```bash
+python scripts/add_voice.py "URL" --name <voice_name> --start <seconds> --duration 30
+```
+4. Restart TTS server to load the new voice
+
+**What to tell the user:**
+> "Find a YouTube video with the voice you want (interviews work great). Watch it and give me the exact timestamp of 30-60 seconds where only that person is speaking clearly — no background music or other voices. Example: 'Use 1:30 to 2:15 from this video: [URL]'"
+
+## Generating Audio
+
+### Quick TTS (short text)
+
 ```bash
 curl -s "http://localhost:8001/v1/audio/speech" -X POST \
   -H "Content-Type: application/json" \
@@ -34,40 +58,16 @@ curl -s "http://localhost:8001/v1/audio/speech" -X POST \
   -o output.wav
 ```
 
-Speed range: 0.25 (very slow) to 4.0 (very fast). Default is 1.0.
+### Long-form content (podcasts, briefs)
 
-## Long-Form Content
-
-For podcasts and longer content:
 ```bash
 python scripts/generate_audio.py script.txt -o output.mp3
 ```
 
-Uses `$TTS_DEFAULT_VOICE` and `$TTS_DEFAULT_SPEED` automatically. Override with flags:
+Uses `$TTS_DEFAULT_VOICE` and `$TTS_DEFAULT_SPEED` automatically. Override:
 ```bash
-python scripts/generate_audio.py script.txt -o output.mp3 -v morgan -s 0.92
+python scripts/generate_audio.py script.txt -o output.mp3 -v alba -s 0.92
 ```
-
-## Adding Custom Voices
-
-When user wants a custom voice:
-
-1. Ask them to find a YouTube video with the voice they want
-2. **Ask for specific timestamps** — the user must provide start time and duration for a clean segment (you cannot analyze the video)
-3. Run the add_voice script with their timestamps:
-```bash
-python scripts/add_voice.py "https://youtube.com/watch?v=..." --name <voice_name> --start <seconds> --duration 30
-```
-4. Restart TTS server to load the new voice
-5. Use the voice by name: `-v <voice_name>`
-
-**What to tell the user:**
-> "Find a YouTube video with the voice you want (interviews work great). Watch it and give me the exact timestamp of 30-60 seconds where only that person is speaking clearly — no background music or other voices. For example: 'Use 1:30 to 2:15 from this video: [URL]'"
-
-**The user must provide:**
-- YouTube URL
-- Start timestamp (e.g., "1:30" or "90 seconds")
-- Duration or end timestamp
 
 ## Available Voices
 
@@ -75,36 +75,22 @@ python scripts/add_voice.py "https://youtube.com/watch?v=..." --name <voice_name
 
 **Custom:** Any `.wav` file in `voices/` directory (auto-loaded on server start)
 
-## Use Cases
-
-- **Voice memos** — Quick audio messages
-- **Podcasts** — Long-form conversational content
-- **Daily briefs** — Morning summaries, news roundups
-- **Audio summaries** — TL;DR versions of documents
-
 ## Podcast Workflow
 
 ### 1. Get Content
 
-Based on input type:
 - **URL**: Use `web_fetch` to get readable content
 - **File**: Read the file directly
 - **Text**: Use as-is
 
 ### 2. Write Script
 
-Create a conversational script. Don't just summarize — make it engaging:
+Create a conversational script — don't just summarize:
 
-**Guidelines:**
-- Length: 2000-4000 words for 10-20 minute podcasts
-- Tone: Conversational, like explaining to a friend
-- Structure: Hook → Context → Deep dive → Takeaways
-
-**Style:**
-- Natural speech patterns ("So here's the thing...", "What's interesting is...")
-- Rhetorical questions to engage listeners
-- Vary sentence length
-- Add personality and opinions
+- **Length**: 2000-4000 words for 10-20 minute podcasts
+- **Tone**: Conversational, like explaining to a friend
+- **Structure**: Hook → Context → Deep dive → Takeaways
+- **Style**: Natural speech patterns, rhetorical questions, varied sentence length
 
 ### 3. Generate Audio
 
@@ -121,4 +107,3 @@ Send the audio file with a brief summary of what's covered.
 - **Longer is better**: 2-minute podcasts feel thin. Aim for 10+ minutes.
 - **Add context**: Don't assume the listener knows the source material.
 - **Be specific**: Concrete examples beat abstract explanations.
-- **Slow down**: Use `ffmpeg -filter:a "atempo=0.9"` if speech is too fast.
