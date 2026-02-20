@@ -144,6 +144,17 @@ Check server status.
 
 Based on [pocket-tts-openapi](https://github.com/IceFog72/pocket-tts-openapi) by IceFog72.
 
+## Responsible Use
+
+This tool enables voice cloning from audio samples. Please use responsibly:
+
+- **Get consent** before cloning someone's voice
+- **Do not use** for impersonation, fraud, or deception
+- **Do not create** non-consensual deepfakes or misleading content
+- **Respect copyright** when using audio from YouTube or other sources
+
+Voice cloning technology can be misused. The authors are not responsible for how this tool is used.
+
 ## License
 
 MIT
