@@ -1,0 +1,18 @@
+# Voice files (users add their own)
+voices/*.wav
+
+# Runtime cache
+audio_cache/
+
+# Python environments
+venv/
+*-env/
+.venv/
+
+# Python
+*.pyc
+__pycache__/
+*.egg-info/
+
+# OS
+.DS_Store

@@ -1,0 +1,7 @@
+pocket_tts
+fastapi
+uvicorn
+pydantic
+soundfile
+anyio
+yt-dlp
