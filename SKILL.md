@@ -40,19 +40,22 @@ python scripts/generate_audio.py script.txt -o output.mp3 -v morgan
 
 When user wants a custom voice:
 
-1. Ask them to find a YouTube video with clear speech (30-60 seconds of the voice they want)
-2. Run the add_voice script:
+1. Ask them to find a YouTube video with the voice they want
+2. **Ask for specific timestamps** — the user must provide start time and duration for a clean segment (you cannot analyze the video)
+3. Run the add_voice script with their timestamps:
 ```bash
-python scripts/add_voice.py "https://youtube.com/watch?v=..." --name <voice_name>
+python scripts/add_voice.py "https://youtube.com/watch?v=..." --name <voice_name> --start <seconds> --duration 30
 ```
-3. Restart TTS server to load the new voice
-4. Use the voice by name: `-v <voice_name>`
+4. Restart TTS server to load the new voice
+5. Use the voice by name: `-v <voice_name>`
 
-**Tips for good source audio:**
-- Interviews and podcasts work best
-- Avoid background music
-- Skip intros with `--start 30`
-- 30-60 seconds is ideal
+**What to tell the user:**
+> "Find a YouTube video with the voice you want (interviews work great). Watch it and give me the exact timestamp of 30-60 seconds where only that person is speaking clearly — no background music or other voices. For example: 'Use 1:30 to 2:15 from this video: [URL]'"
+
+**The user must provide:**
+- YouTube URL
+- Start timestamp (e.g., "1:30" or "90 seconds")
+- Duration or end timestamp
 
 ## Available Voices
 

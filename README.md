@@ -42,8 +42,8 @@ curl http://localhost:8001/v1/audio/speech -X POST \
 Clone a voice from any YouTube video:
 
 ```bash
-# Find a YouTube video with clear speech (interviews work great)
-python scripts/add_voice.py "https://youtube.com/watch?v=..." --name morgan
+# Provide the URL and specific timestamps for clean speech
+python scripts/add_voice.py "https://youtube.com/watch?v=..." --name morgan --start 45 --duration 30
 
 # Use your new voice
 curl http://localhost:8001/v1/audio/speech -X POST \
@@ -52,11 +52,15 @@ curl http://localhost:8001/v1/audio/speech -X POST \
   -o test.wav
 ```
 
-**Tips for good voice clones:**
-- Use 30-60 seconds of clear speech
-- Avoid background music or multiple speakers
-- Interviews and podcasts work well
-- Use `--start` to skip intros: `--start 30 --duration 45`
+**Important:** You must provide specific timestamps (`--start` and `--duration`) pointing to a clean segment of speech. The tool cannot analyze the video — you need to watch it and identify 30-60 seconds where:
+- Only the target voice is speaking
+- No background music or other speakers
+- Clear audio quality
+
+**Example workflow:**
+1. Find a YouTube interview or podcast with the voice you want
+2. Watch it and note a timestamp with clean solo speech (e.g., 1:30 to 2:15)
+3. Run: `python scripts/add_voice.py "URL" --name morgan --start 90 --duration 45`
 
 ## Available Voices
 
