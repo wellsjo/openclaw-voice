@@ -15,6 +15,9 @@ from pathlib import Path
 import urllib.request
 import urllib.error
 
+ROOT = Path(__file__).resolve().parent.parent
+ENSURE_TTS = ROOT / "scripts" / "ensure_tts.py"
+
 TTS_URL = os.environ.get("TTS_URL", "http://localhost:8001/v1/audio/speech")
 DEFAULT_VOICE = os.environ.get("TTS_DEFAULT_VOICE", "alba")
 DEFAULT_SPEED = float(os.environ.get("TTS_DEFAULT_SPEED", "1.0"))
@@ -27,8 +30,24 @@ def check_tts_server():
         req = urllib.request.Request("http://localhost:8001/health")
         urllib.request.urlopen(req, timeout=5)
         return True
-    except:
+    except Exception:
         return False
+
+
+def ensure_tts_server() -> None:
+    """Self-heal the local TTS runtime and start the server when needed."""
+    if check_tts_server():
+        return
+
+    result = subprocess.run(
+        [sys.executable, str(ENSURE_TTS), "--quiet"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        details = (result.stderr or result.stdout).strip()
+        raise RuntimeError(f"Failed to ensure local TTS server: {details}")
 
 
 def chunk_text(text: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> list[str]:
@@ -119,7 +138,7 @@ def concatenate_audio(input_files: list[str], output_path: str) -> bool:
 
 def main():
     parser = argparse.ArgumentParser(description='Generate podcast audio from script')
-    parser.add_argument('script_file', help='Path to the podcast script (text file)')
+    parser.add_argument('script_file', nargs='?', help='Path to the podcast script (text file)')
     parser.add_argument('-o', '--output', default='podcast.mp3', help='Output file path')
     parser.add_argument('-v', '--voice', default=DEFAULT_VOICE, 
                         help=f'TTS voice (default: $TTS_DEFAULT_VOICE or "{DEFAULT_VOICE}")')
@@ -128,16 +147,21 @@ def main():
     parser.add_argument('--text', help='Direct text input instead of file')
     args = parser.parse_args()
     
-    # Check TTS server
-    if not check_tts_server():
-        print("ERROR: TTS server not running at localhost:8001", file=sys.stderr)
-        print("Start it with: cd ~/projects/pocket-tts-openapi && source venv/bin/activate && python pocketapi.py", file=sys.stderr)
+    # Check TTS server and self-heal if needed
+    try:
+        ensure_tts_server()
+    except RuntimeError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        print("Repair it with: python scripts/ensure_tts.py", file=sys.stderr)
         sys.exit(1)
     
     # Get script text
     if args.text:
         script_text = args.text
     else:
+        if not args.script_file:
+            print("ERROR: Provide a script file or use --text", file=sys.stderr)
+            sys.exit(1)
         script_path = Path(args.script_file)
         if not script_path.exists():
             print(f"ERROR: Script file not found: {script_path}", file=sys.stderr)

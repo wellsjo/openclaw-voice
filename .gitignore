@@ -6,6 +6,7 @@ audio_cache/
 
 # Python environments
 venv/
+venv.fixed/
 *-env/
 .venv/
 

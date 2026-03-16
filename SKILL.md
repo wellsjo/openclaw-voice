@@ -1,35 +1,24 @@
 ---
 name: voice
-description: Generate audio from text using TTS. Use for podcasts, audio summaries, daily briefs, voice memos, or any spoken content.
+description: Generate audio from local TTS for podcasts, audio summaries, daily briefs, voice memos, or any spoken content. Use when spoken output is requested, and repair the local voice runtime with `python scripts/ensure_tts.py` if localhost:8001 is unhealthy or a Python upgrade broke the virtualenv.
 ---
 
 # Voice
 
-Generate audio content using local TTS.
+Generate audio with the local Pocket TTS skill.
 
-## Installation
+## Canonical commands
 
-If TTS server isn't running (`curl -s http://localhost:8001/health` fails):
-
+Install or repair the runtime:
 ```bash
-# Clone if not already present
-if [ ! -d ~/skills/voice ]; then
-  git clone https://github.com/wellsjo/openclaw-voice.git ~/skills/voice
-fi
-
-cd ~/skills/voice
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install system deps if missing
-which ffmpeg || brew install ffmpeg      # macOS
-which yt-dlp || pip install yt-dlp
+cd ~/git-repos/openclaw-voice
+python3 scripts/ensure_tts.py --install-only
 ```
 
-Start the server:
+Start or self-heal the server:
 ```bash
-cd ~/skills/voice && nohup python pocketapi.py > /tmp/tts.log 2>&1 &
+cd ~/git-repos/openclaw-voice
+python3 scripts/ensure_tts.py
 ```
 
 Verify:
@@ -37,70 +26,72 @@ Verify:
 curl -s http://localhost:8001/health
 ```
 
+What `ensure_tts.py` does:
+- pick a supported local Python (3.10-3.14)
+- rebuild `.venv` if it is missing or broken
+- reinstall requirements
+- start `pocketapi.py`
+- wait for `localhost:8001/health`
+
+Use it whenever the server is down, after Python/Homebrew upgrades, or before blaming TTS.
+
 ## Configuration
 
-Set defaults in user's shell profile (`~/.zshrc` or `~/.bashrc`):
-
+Set defaults in the shell profile if needed:
 ```bash
-export TTS_DEFAULT_VOICE=alba       # or custom voice name
-export TTS_DEFAULT_SPEED=1.0        # 0.25-4.0, lower = slower
+export TTS_DEFAULT_VOICE=alba
+export TTS_DEFAULT_SPEED=1.0
 ```
 
-## Adding Custom Voices
+## Adding custom voices
 
-User must provide:
-- YouTube URL with the voice they want
-- **Specific timestamps** (you cannot watch the video)
+Require the user to provide:
+- YouTube URL
+- exact timestamps with 30-60 seconds of isolated speech
 
-Tell them:
-> "Find a YouTube video with the voice you want. Watch it and give me the exact timestamp of 30-60 seconds where only that person is speaking clearly — no background music. Example: 'Use 1:30 to 2:15 from this video: [URL]'"
-
-Once they provide URL + timestamps:
+Then run:
 ```bash
-cd ~/skills/voice
+cd ~/git-repos/openclaw-voice
 python scripts/add_voice.py "URL" --name <voice_name> --start <seconds> --duration 30
+python scripts/ensure_tts.py
 ```
 
-Restart server to load new voice:
-```bash
-pkill -f pocketapi.py
-cd ~/skills/voice && nohup python pocketapi.py > /tmp/tts.log 2>&1 &
-```
+## Generating audio
 
-Update their shell profile:
+Quick request:
 ```bash
-echo 'export TTS_DEFAULT_VOICE=<voice_name>' >> ~/.zshrc
-```
-
-## Generating Audio
-
-### Quick TTS
-```bash
-curl -s "http://localhost:8001/v1/audio/speech" -X POST \
+curl -s http://localhost:8001/v1/audio/speech -X POST \
   -H "Content-Type: application/json" \
-  -d '{"input":"Text here", "voice":"'$TTS_DEFAULT_VOICE'", "speed":'${TTS_DEFAULT_SPEED:-1.0}'}' \
+  -d '{"input":"Text here","voice":"'"${TTS_DEFAULT_VOICE:-alba}"'","speed":'"${TTS_DEFAULT_SPEED:-1.0}"'}' \
   -o output.wav
 ```
 
-### Long-form (podcasts, briefs)
+Long-form:
 ```bash
-python ~/skills/voice/scripts/generate_audio.py script.txt -o output.mp3
+cd ~/git-repos/openclaw-voice
+python scripts/generate_audio.py script.txt -o output.mp3
 ```
 
-Override defaults:
-```bash
-python ~/skills/voice/scripts/generate_audio.py script.txt -o output.mp3 -v alba -s 0.92
-```
+`generate_audio.py` now auto-runs `scripts/ensure_tts.py` if the server is unhealthy.
 
-## Available Voices
+## Voices
 
-**Built-in:** alba, marius, javert, jean, fantine, cosette, eponine, azelma
+Built-in:
+- alba
+- marius
+- javert
+- jean
+- fantine
+- cosette
+- eponine
+- azelma
 
-**Custom:** Any `.wav` in `voices/` directory (loaded on server start)
+Custom:
+- any `.wav` file in `voices/`
 
-## Podcast Workflow
+## Workflow
 
-1. **Get content** — `web_fetch` for URLs, read files, or use provided text
-2. **Write script** — Conversational, 2000-4000 words, not a dry summary
-3. **Generate** — `python ~/skills/voice/scripts/generate_audio.py script.txt -o podcast.mp3`
-4. **Deliver** — Send audio with brief summary
+1. Gather content with `web_fetch`, files, or user text.
+2. Write a conversational script.
+3. Run `python scripts/generate_audio.py ...`.
+4. Deliver the audio file with a short summary.

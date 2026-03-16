@@ -122,11 +122,12 @@ def main():
     
     print(f"\n✓ Voice '{args.name}' saved to: {output_path}")
     print(f"\nTo use this voice:")
+    print(f"  python scripts/ensure_tts.py")
     print(f"  curl http://localhost:8001/v1/audio/speech -X POST \\")
     print(f"    -H 'Content-Type: application/json' \\")
     print(f"    -d '{{\"input\": \"Hello world\", \"voice\": \"{args.name}\"}}' \\")
     print(f"    -o test.wav")
-    print(f"\nNote: Restart the TTS server to load the new voice.")
+    print(f"\nNote: Run `python scripts/ensure_tts.py` after adding a voice so the server is up and healthy.")
 
 
 if __name__ == "__main__":
