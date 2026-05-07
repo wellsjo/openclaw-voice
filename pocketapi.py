@@ -24,6 +24,7 @@ QUEUE_TIMEOUT = 10.0  # Increased from 2.0 to prevent dropping chunks
 EOF_TIMEOUT = 1.0
 CHUNK_SIZE = 32 * 1024
 DEFAULT_SAMPLE_RATE = 24000
+DEFAULT_VOICE = os.environ.get("TTS_DEFAULT_VOICE", "mattdamon")
 
 # ANSI color codes for terminal output
 class Colors:
@@ -132,7 +133,7 @@ class SpeechRequest(BaseModel):
     input: str = Field(
         ..., min_length=1, max_length=4096, description="Text to generate"
     )
-    voice: str = Field("alloy", description="Voice identifier (predefined or custom)")
+    voice: str = Field(DEFAULT_VOICE, description="Voice identifier (predefined or custom)")
     response_format: Literal["mp3", "opus", "aac", "flac", "wav", "pcm"] = Field("wav")
     speed: Optional[float] = Field(1.0, ge=0.25, le=4.0)
 
@@ -146,7 +147,7 @@ class SpeechRequest(BaseModel):
     @field_validator("voice", mode="before")
     @classmethod
     def validate_voice(cls, v: str) -> str:
-        return v.strip() if v else v
+        return v.strip() if v else DEFAULT_VOICE
 
     @field_validator("response_format", mode="before")
     @classmethod
@@ -379,7 +380,7 @@ async def _generate_audio_core(
 
 async def generate_audio(
     text: str,
-    voice: str = "alloy",
+    voice: str = DEFAULT_VOICE,
     speed: float = 1.0,
     format: str = "wav",
     chunk_size: int = CHUNK_SIZE,
@@ -563,25 +564,12 @@ if __name__ == "__main__":
         "fmt"
     ] = '%(asctime)s - %(client_addr)s - "%(request_line)s" %(status_code)s'
 
-    import socket
-
-    def find_free_port(start_port: int = 8001, max_retries: int = 20) -> int:
-        """Find the first available port starting from start_port."""
-        for port in range(start_port, start_port + max_retries):
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                try:
-                    s.bind(("0.0.0.0", port))
-                    return port
-                except OSError:
-                    continue
-        raise RuntimeError(f"Could not find a free port in range {start_port}-{start_port + max_retries}")
-
     try:
-        port = find_free_port(8001)
-        logger.info(f"Starting server with HTTP debug logging enabled")
-        logger.info(f"✅ Server binding to: http://0.0.0.0:{port}")
+        port = int(os.environ.get("TTS_PORT", "8001"))
+        logger.info("Starting server with HTTP debug logging enabled")
+        logger.info(f"✅ Server binding to: http://127.0.0.1:{port}")
         logger.info(f"ℹ️  If you are using SillyTavern, set provider endpoint to: http://127.0.0.1:{port}/v1/audio/speech")
-        uvicorn.run(app, host="0.0.0.0", port=port, log_config=log_config, access_log=True)
+        uvicorn.run(app, host="127.0.0.1", port=port, log_config=log_config, access_log=True)
     except Exception as e:
         logger.exception("Failed to start server")
         input("Press Enter to exit...")

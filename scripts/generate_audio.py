@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ENSURE_TTS = ROOT / "scripts" / "ensure_tts.py"
 
 TTS_URL = os.environ.get("TTS_URL", "http://localhost:8001/v1/audio/speech")
-DEFAULT_VOICE = os.environ.get("TTS_DEFAULT_VOICE", "alba")
+DEFAULT_VOICE = os.environ.get("TTS_DEFAULT_VOICE", "mattdamon")
 DEFAULT_SPEED = float(os.environ.get("TTS_DEFAULT_SPEED", "1.0"))
 MAX_CHARS_PER_CHUNK = 4000  # Safe limit per TTS request
 

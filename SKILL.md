@@ -1,6 +1,6 @@
 ---
 name: voice
-description: Generate audio from local TTS for podcasts, audio summaries, daily briefs, voice memos, or any spoken content. Use when spoken output is requested, and repair the local voice runtime with `python scripts/ensure_tts.py` if localhost:8001 is unhealthy or a Python upgrade broke the virtualenv.
+description: Generate audio with the local Pocket TTS runtime for podcasts, audio summaries, daily briefs, voice memos, or any spoken content. Use this whenever spoken output or TTS is requested; do not use hosted image/music/audio generation tools for voice. Repair the local runtime with `python scripts/ensure_tts.py` if localhost:8001 is unhealthy or a Python upgrade broke the virtualenv.
 ---
 
 # Voice
@@ -39,7 +39,7 @@ Use it whenever the server is down, after Python/Homebrew upgrades, or before bl
 
 Set defaults in the shell profile if needed:
 ```bash
-export TTS_DEFAULT_VOICE=alba
+export TTS_DEFAULT_VOICE=mattdamon
 export TTS_DEFAULT_SPEED=1.0
 ```
 
@@ -62,7 +62,7 @@ Quick request:
 ```bash
 curl -s http://localhost:8001/v1/audio/speech -X POST \
   -H "Content-Type: application/json" \
-  -d '{"input":"Text here","voice":"'"${TTS_DEFAULT_VOICE:-alba}"'","speed":'"${TTS_DEFAULT_SPEED:-1.0}"'}' \
+  -d '{"input":"Text here","voice":"'"${TTS_DEFAULT_VOICE:-mattdamon}"'","speed":'"${TTS_DEFAULT_SPEED:-1.0}"'}' \
   -o output.wav
 ```
 
@@ -87,11 +87,12 @@ Built-in:
 - azelma
 
 Custom:
+- mattdamon (default; `voices/mattdamon.wav`)
 - any `.wav` file in `voices/`
 
 ## Workflow
 
 1. Gather content with `web_fetch`, files, or user text.
 2. Write a conversational script.
-3. Run `python scripts/generate_audio.py ...`.
+3. Run `python scripts/generate_audio.py ...` (defaults to local Pocket TTS voice `mattdamon`; pass `--voice mattdamon` explicitly when in doubt).
 4. Deliver the audio file with a short summary.
